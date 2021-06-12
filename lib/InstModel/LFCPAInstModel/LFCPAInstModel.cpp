@@ -180,8 +180,9 @@ std::vector<Token *> LFCPAInstModel::extractToken(llvm::CmpInst *Inst) {
 //	llvm::errs()<<"\n VALUE= "<<*v;
 
 	I = llvm::dyn_cast<llvm::Instruction>(v);
-        q.push(I);
-
+	if(I != nullptr){
+        	q.push(I);
+	}
 	
 	while(!q.empty()) {
 	        llvm::Instruction *I = q.front();
@@ -205,7 +206,9 @@ std::vector<Token *> LFCPAInstModel::extractToken(llvm::CmpInst *Inst) {
 		 	   llvm::Value* v = U.get();
 		//	   llvm::errs()<<"\n VALUE= "<<*v;
 			   llvm::Instruction *I1 = llvm::dyn_cast<llvm::Instruction>(v);
-		           q.push(I1);
+			   if(I != nullptr){
+		           	q.push(I1);
+			   }	
 			}
 		   }
 	    }//end if load
@@ -262,6 +265,14 @@ std::vector<Token *> LFCPAInstModel::extractToken(llvm::ReturnInst *Inst) {
 		   Ins = I;
 		}//end else
 	    }//end if load
+	    else if(llvm::BitCastInst *BI = llvm::dyn_cast<llvm::BitCastInst>(I)){
+		Ins = I;
+		InstInfoMap[I] = II;
+	    }
+	    else {
+		skipFlag = true;
+		break;
+	   }
 	}//end for
      }//end while	
   }//end if
@@ -285,6 +296,18 @@ std::vector<Token *> LFCPAInstModel::extractToken(llvm::BitCastInst *Inst) {
   } else if (llvm::BitCastInst *BI =
                  llvm::dyn_cast<llvm::BitCastInst>(Inst->getOperand(0))) {
     TokenVec.push_back(this->getTokenWrapper()->getToken(BI->getDestTy()));
+  } else if(llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(Inst->getOperand(0))) {
+	Token* TokLIOp = this->getTokenWrapper()->getToken(LI->getPointerOperand());
+	if(!TokLIOp->isGlobalVar()) {
+		if(llvm::LoadInst* LIOp = llvm::dyn_cast<llvm::LoadInst>(LI->getPointerOperand())) {
+			std::vector<Token*> LITokens = this->extractToken(LIOp);
+			if(LITokens.size()==2) {
+				TokenVec.push_back(LITokens[1]);
+			}
+		}
+	} else {
+		TokenVec.push_back(this->getTokenWrapper()->getToken(LI->getPointerOperand()));
+	}
   }
   if (TokenVec.size() == 1) {
     TokenVec.push_back(this->getTokenWrapper()->getToken(Inst->getOperand(0)));
