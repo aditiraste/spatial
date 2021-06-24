@@ -12,6 +12,8 @@ void Token::set(llvm::Value *Val, unsigned int Kind, std::string Index,
   this->IsGlobal = Global;
   if (!Func)
     this->IsGlobal = true;
+  if(llvm::isa<llvm::ConstantPointerNull>(Val))
+    this->name = "NULL";
 }
 
 void Token::set(llvm::Type *Ty, unsigned int Kind, std::string Index) {
@@ -161,6 +163,8 @@ std::ostream &operator<<(std::ostream &OS, const Token &A) {
 /// function etc
 llvm::StringRef Token::getName() const {
   if (this->Kind == 0) {
+    if(this->name != "")
+      return this->name;
     return this->Val->getName();
   } else if (this->Kind == 2) {
     return this->Arg->getName();
@@ -232,6 +236,11 @@ bool Token::isValPointerType() const {
  if (this->Ty->isPointerTy())
 	return true;
  return false;
+}
+
+///  isNullPointer - Return true if token is a nullptr
+bool Token::isNullPointer() const {
+  return this->name == "NULL";
 }
 
 ///  getHash - Calculates the hash for alias to avoid multiple enteries of same

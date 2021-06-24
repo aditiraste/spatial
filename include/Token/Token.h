@@ -10,6 +10,7 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/IR/Constants.h"
 
 namespace spatial {
 
@@ -68,6 +69,7 @@ public:
   bool isValPointerType() const;
   std::string getHash() const;
   bool isPointerType() const;
+  bool isNullPointer() const;
 
   bool operator<(const Token &TheToken) const;
   bool operator==(const Token &TheToken) const;
