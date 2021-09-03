@@ -42,6 +42,7 @@ public:
 
   bool isInstSkip(llvm::Instruction *);
   template <typename GOP> bool isStructFieldPointerTy(GOP *);
+  template <typename GOP> bool isGEPOperandArrayTy(GOP *);
   Token *extractDummy(std::string);
 };
 } // namespace spatial

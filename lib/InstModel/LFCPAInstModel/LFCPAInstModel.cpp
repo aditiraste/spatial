@@ -407,18 +407,48 @@ LFCPAInstModel::handleGEPUtil<llvm::GEPOperator>(llvm::GEPOperator *G,
                                                  Token *Ptr);
 
 template <typename GOP> bool LFCPAInstModel::isStructFieldPointerTy(GOP *G) {
-  long int cntOp = G->getNumOperands();
-  llvm::Type *BaseTy = G->getOperand(0)->getType()->getContainedType(0);
-  llvm::ConstantInt *CI =
-      llvm::dyn_cast<llvm::ConstantInt>(G->getOperand(cntOp - 1));
-  auto conVal = CI->getSExtValue();
-  return (BaseTy->getStructElementType(conVal)->isPointerTy());
+  llvm::Type *StructType = G->getOperand(0)->getType();
+  if(StructType->getNumContainedTypes() > 0)
+      StructType = StructType->getContainedType(0);
+  for (int i = 2; i < G->getNumOperands(); i++) {
+    while(StructType->isArrayTy()){
+        StructType = StructType->getArrayElementType();
+        i = i + 1;
+    }
+    if(i >= G->getNumOperands()) break;
+    llvm::Value *IdxV = G->getOperand(i);
+    llvm::ConstantInt *Idx = llvm::cast<llvm::ConstantInt>(IdxV); 
+    StructType = StructType->getStructElementType(Idx->getSExtValue());
+  }
+  return StructType->isPointerTy();
 }
 
 template bool LFCPAInstModel::isStructFieldPointerTy<llvm::GetElementPtrInst>(
     llvm::GetElementPtrInst *G);
 template bool
 LFCPAInstModel::isStructFieldPointerTy<llvm::GEPOperator>(llvm::GEPOperator *G);
+
+template <typename GOP> bool LFCPAInstModel::isGEPOperandArrayTy(GOP *G) {
+  llvm::Type *StructType = G->getOperand(0)->getType();
+  if(StructType->getNumContainedTypes() > 0)
+      StructType = StructType->getContainedType(0);
+  for (int i = 2; i < G->getNumOperands(); i++) {
+    while(StructType->isArrayTy()){
+        StructType = StructType->getArrayElementType();
+        i = i + 1;
+    }
+    if(i >= G->getNumOperands()) break;
+    llvm::Value *IdxV = G->getOperand(i);
+    llvm::ConstantInt *Idx = llvm::cast<llvm::ConstantInt>(IdxV); 
+    StructType = StructType->getStructElementType(Idx->getSExtValue());
+  }
+  return StructType->isArrayTy();
+}
+
+template bool LFCPAInstModel::isGEPOperandArrayTy<llvm::GetElementPtrInst>(
+    llvm::GetElementPtrInst *G);
+template bool
+LFCPAInstModel::isGEPOperandArrayTy<llvm::GEPOperator>(llvm::GEPOperator *G);
 
 Token *LFCPAInstModel::extractDummy(std::string S) {
   return (this->getTokenWrapper()->getToken(S, nullptr));
