@@ -6,6 +6,7 @@
 #include "Token/Token.h"
 
 #include "vector"
+#include "iostream"
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalVariable.h"
@@ -42,6 +43,8 @@ public:
 
   bool isInstSkip(llvm::Instruction *);
   template <typename GOP> bool isStructFieldPointerTy(GOP *);
+  template <typename GOP> bool isGEPOperandArrayTy(GOP *, int);
+  template <typename GOP> std::vector<int> getGEPArrayIndex(GOP *);
   Token *extractDummy(std::string);
 };
 } // namespace spatial
