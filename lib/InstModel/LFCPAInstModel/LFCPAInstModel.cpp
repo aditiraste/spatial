@@ -433,10 +433,9 @@ template <typename GOP> bool LFCPAInstModel::isGEPOperandArrayTy(GOP *G, int Idx
   if(StructType->getNumContainedTypes() > 0)
       StructType = StructType->getContainedType(0);
   int OpNum = G->getNumOperands();
-  Idx += 1;
-  if(Idx > 1)
+  if(Idx > 0)
       OpNum = Idx;
-  for (int i = 2; i < OpNum; i++) {
+  for (int i = 2; i <= OpNum; i++) {
     while(StructType->isArrayTy()){
         StructType = StructType->getArrayElementType();
         i = i + 1;
@@ -457,10 +456,11 @@ LFCPAInstModel::isGEPOperandArrayTy<llvm::GEPOperator>(llvm::GEPOperator *G, int
 template <typename GOP> std::vector<int> LFCPAInstModel::getGEPArrayIndex(GOP *G) {
   std::vector<int> Idx;
   for (int i = 2; i < G->getNumOperands(); i++) {
-      if(isGEPOperandArrayTy(G, i)){
-          Idx.push_back(i + 1);
+      if(isGEPOperandArrayTy(G, i - 1)){
+          Idx.push_back(i);
       }
   }
+  std::cout << std::endl;
   return Idx;
 }
 
